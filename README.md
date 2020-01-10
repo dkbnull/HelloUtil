@@ -1,6 +1,8 @@
 # Hello Util	通用工具类	v1.0.15
 
-GitHub	[https://github.com/dkbnull/HelloUtil](https://github.com/dkbnull/HelloUtil)
+GitHub：[https://github.com/dkbnull/HelloUtil](https://github.com/dkbnull/HelloUtil)
+
+Gitee：[https://gitee.com/dkbnull/HelloUtil](https://gitee.com/dkbnull/HelloUtil)
 
 ## 开发环境
 
