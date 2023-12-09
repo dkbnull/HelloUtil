@@ -8,7 +8,7 @@ import java.util.List;
  * File 工具类
  *
  * @author dukunbiao(null) 2018-08-08
- *         https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/Util
  */
 public class FileUtils {
 
@@ -80,21 +80,16 @@ public class FileUtils {
      * @throws Exception
      */
     public static List<String> readFile(String path, String charset) throws Exception {
-        InputStream inputStream = null;
-        InputStreamReader inputStreamReader = null;
-        BufferedReader bufferedReader = null;
+        File file = new File(path);
 
-        try {
-            File file = new File(path);
+        if (!file.exists()) {
+            throw new Exception("file not exist:" + path);
+        }
 
-            if (!file.exists()) {
-                throw new Exception("file not exist:" + path);
-            }
-
+        try (InputStream inputStream = new FileInputStream(file);
+             InputStreamReader inputStreamReader = new InputStreamReader(inputStream, charset);
+             BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
             List<String> listValue = new ArrayList<>();
-            inputStream = new FileInputStream(file);
-            inputStreamReader = new InputStreamReader(inputStream, charset);
-            bufferedReader = new BufferedReader(inputStreamReader);
 
             String str;
             while ((str = bufferedReader.readLine()) != null) {
@@ -102,20 +97,6 @@ public class FileUtils {
             }
 
             return listValue;
-        } finally {
-            try {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-                if (inputStreamReader != null) {
-                    inputStreamReader.close();
-                }
-                if (bufferedReader != null) {
-                    bufferedReader.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
