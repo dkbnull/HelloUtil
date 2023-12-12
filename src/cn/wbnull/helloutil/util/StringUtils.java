@@ -4,7 +4,9 @@ import cn.wbnull.helloutil.constant.UtilConstants;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -12,7 +14,7 @@ import java.util.regex.Pattern;
  * String 工具类
  *
  * @author dukunbiao(null)  2018-07-26
- *         https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/HelloUtil
  */
 public class StringUtils {
 
@@ -23,8 +25,10 @@ public class StringUtils {
     private static final String SYMBOLS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final Random RANDOM = new SecureRandom();
 
-    private static Pattern PATTERN_IS_NUMERIC = Pattern.compile("-?[0-9]*+.?[0-9]*");
-    private static Pattern PATTERN_IS_INTEGER = Pattern.compile("-?[0-9]*");
+    private static final Pattern PATTERN_NUMERIC = Pattern.compile("-?[0-9]*+.?[0-9]*");
+    private static final Pattern PATTERN_INTEGER = Pattern.compile("-?[0-9]*");
+    private static final Pattern PATTERN_PHONE = Pattern.compile("^[1]\\d{10}$");
+    private static final Pattern PATTERN_PHS = Pattern.compile("\\d{8}$");
 
     private StringUtils() {
     }
@@ -77,7 +81,7 @@ public class StringUtils {
      * @return true/false
      */
     public static boolean isNumeric(String value) {
-        return (!isEmpty(value)) && PATTERN_IS_NUMERIC.matcher(value).matches();
+        return (!isEmpty(value)) && PATTERN_NUMERIC.matcher(value).matches();
     }
 
     /**
@@ -87,7 +91,15 @@ public class StringUtils {
      * @return true/false
      */
     public static boolean isInteger(String value) {
-        return (!isEmpty(value)) && PATTERN_IS_INTEGER.matcher(value).matches();
+        return (!isEmpty(value)) && PATTERN_INTEGER.matcher(value).matches();
+    }
+
+    public static boolean isPhone(String value) {
+        return (!isEmpty(value)) && PATTERN_PHONE.matcher(value).matches();
+    }
+
+    public static boolean isPhs(String value) {
+        return (!isEmpty(value)) && PATTERN_PHS.matcher(value).matches();
     }
 
     /**
@@ -136,10 +148,76 @@ public class StringUtils {
         if (STRING_TYPE_LEFT.equalsIgnoreCase(tag)) {
             return value.substring(0, length);
         } else if (STRING_TYPE_RIGHT.equalsIgnoreCase(tag)) {
-            return value.substring(value.length() - length, value.length());
+            return value.substring(value.length() - length);
         } else {
             return value;
         }
+    }
+
+    public static String substringValue(String value, int length, String tag, String charset) {
+        if (isEmpty(value)) {
+            return "";
+        }
+
+        try {
+            if (value.getBytes(charset).length <= length) {
+                return value;
+            }
+        } catch (UnsupportedEncodingException ignore) {
+
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        if (STRING_TYPE_LEFT.equalsIgnoreCase(tag)) {
+            while (length > 0) {
+                String valueChar = value.substring(0, 1);
+                value = value.substring(1);
+                int lengthValue;
+                try {
+                    lengthValue = valueChar.getBytes(charset).length;
+                } catch (UnsupportedEncodingException e) {
+                    lengthValue = value.length();
+                }
+                //是汉字
+                if (lengthValue == 2) {
+                    if (length >= 2) {
+                        sb.append(valueChar);
+                    } else {
+                        sb.append(" ");
+                    }
+                } else {
+                    sb.append(valueChar);
+                }
+
+                length = length - lengthValue;
+            }
+        } else {
+            while (length > 0) {
+                String valueChar = value.substring(value.length() - 1);
+                value = value.substring(0, value.length() - 1);
+                int lengthValue;
+                try {
+                    lengthValue = valueChar.getBytes(charset).length;
+                } catch (UnsupportedEncodingException e) {
+                    lengthValue = value.length();
+                }
+                //是汉字
+                if (lengthValue == 2) {
+                    if (length >= 2) {
+                        sb.insert(0, valueChar);
+                    } else {
+                        sb.insert(0, " ");
+                    }
+                } else {
+                    sb.insert(0, valueChar);
+                }
+
+                length = length - lengthValue;
+            }
+        }
+
+        return sb.toString();
     }
 
     /**
@@ -181,7 +259,7 @@ public class StringUtils {
      */
     public static int toInt(String value, int defaultValue) {
         if ((!isEmpty(value)) && (isInteger(value))) {
-            return Integer.valueOf(value);
+            return Integer.parseInt(value);
         }
 
         return defaultValue;
@@ -196,7 +274,7 @@ public class StringUtils {
      */
     public static long toLong(String value, long defaultValue) {
         if ((!isEmpty(value)) && (isInteger(value))) {
-            return Long.valueOf(value);
+            return Long.parseLong(value);
         }
 
         return defaultValue;
@@ -211,7 +289,7 @@ public class StringUtils {
      */
     public static double toDouble(String value, double defaultValue) {
         if ((!isEmpty(value)) && (isNumeric(value))) {
-            return Double.valueOf(value);
+            return Double.parseDouble(value);
         }
 
         return defaultValue;
@@ -257,6 +335,42 @@ public class StringUtils {
     }
 
     /**
+     * 获取UTF-8编码格式字符串
+     *
+     * @param value 待转化字符串
+     * @return UTF-8编码格式字符串
+     * @throws Exception
+     */
+    public static String toUTF8String(String value) throws Exception {
+        return new String(value.getBytes(UtilConstants.CHARSET_GB2312), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 获取UTF-8编码格式字符串
+     *
+     * @param value       待转化字符串
+     * @param fromCharset 待转化字符串字符集
+     * @return 转换后字符串
+     * @throws Exception
+     */
+    public static String toUTF8String(String value, String fromCharset) throws Exception {
+        return new String(value.getBytes(fromCharset), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 获取指定编码格式字符串
+     *
+     * @param value       待转化字符串
+     * @param fromCharset 待转化字符串字符集
+     * @param toCharset   转化后字符串字符集
+     * @return 转换后字符串
+     * @throws Exception
+     */
+    public static String toCharsetString(String value, String fromCharset, String toCharset) throws Exception {
+        return new String(value.getBytes(fromCharset), toCharset);
+    }
+
+    /**
      * 16进制字符串转byte
      *
      * @param value 16进制字符串
@@ -282,39 +396,53 @@ public class StringUtils {
     }
 
     /**
-     * 获取指定编码格式字符串
+     * 字符串补空格，字符串长度大于补全后长度则截取字符串
      *
-     * @param value       待转化字符串
-     * @param fromCharset 待转化字符串字符集
-     * @param toCharset   转化后字符串字符集
-     * @return 转换后字符串
-     * @throws Exception
+     * @param value  待补全字符串
+     * @param length 补全后长度
+     * @param tag    R 右补全   L 左补全
+     * @return 补全后字符串
      */
-    public static String toCharsetString(String value, String fromCharset, String toCharset) throws Exception {
-        return new String(value.getBytes(fromCharset), toCharset);
-    }
+    public static String stringPadding(String value, int length, String tag) {
+        if (isEmpty(value)) {
+            value = "";
+        }
+        if (length <= 0) {
+            return value;
+        }
 
-    /**
-     * 获取UTF-8编码格式字符串
-     *
-     * @param value       待转化字符串
-     * @param fromCharset 待转化字符串字符集
-     * @return 转换后字符串
-     * @throws Exception
-     */
-    public static String toUTF8String(String value, String fromCharset) throws Exception {
-        return new String(value.getBytes(fromCharset), UtilConstants.CHARSET_UTF8);
-    }
+        int lengthValue;
+        try {
+            lengthValue = value.getBytes(UtilConstants.CHARSET_GBK).length;
+        } catch (UnsupportedEncodingException e) {
+            lengthValue = value.length();
+        }
 
-    /**
-     * 获取UTF-8编码格式字符串
-     *
-     * @param value 待转化字符串
-     * @return UTF-8编码格式字符串
-     * @throws Exception
-     */
-    public static String toUTF8String(String value) throws Exception {
-        return new String(value.getBytes(UtilConstants.CHARSET_GB2312), UtilConstants.CHARSET_UTF8);
+        if (lengthValue == length) {
+            return value;
+        }
+
+        if (lengthValue > length) {
+            if (STRING_TYPE_RIGHT.equalsIgnoreCase(tag)) {
+                return substringValue(value, length, STRING_TYPE_LEFT, UtilConstants.CHARSET_GBK);
+            } else if (STRING_TYPE_LEFT.equalsIgnoreCase(tag)) {
+                return substringValue(value, length, STRING_TYPE_RIGHT, UtilConstants.CHARSET_GBK);
+            } else {
+                return value;
+            }
+        }
+
+        length = length - (lengthValue - value.length());
+        String padFormat;
+        if (STRING_TYPE_LEFT.equalsIgnoreCase(tag)) {
+            padFormat = "%" + length + "s";
+        } else if (STRING_TYPE_RIGHT.equalsIgnoreCase(tag)) {
+            padFormat = "%-" + length + "s";
+        } else {
+            padFormat = "%s";
+        }
+
+        return String.format(padFormat, value);
     }
 
     /**
@@ -347,7 +475,7 @@ public class StringUtils {
         try {
             int lengthValue = value.getBytes(charset).length;
             length = length - (lengthValue - value.length());
-        } catch (UnsupportedEncodingException e) {
+        } catch (UnsupportedEncodingException ignore) {
 
         }
 
@@ -394,7 +522,7 @@ public class StringUtils {
         int lengthValue = 0;
         try {
             lengthValue = value.getBytes(charset).length;
-        } catch (UnsupportedEncodingException e) {
+        } catch (UnsupportedEncodingException ignore) {
 
         }
 
@@ -418,18 +546,45 @@ public class StringUtils {
         return res.toString();
     }
 
+    public static String join(List<String> values) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(");
+        for (String value : values) {
+            sb.append("'").append(value).append("'").append(",");
+        }
+        sb.deleteCharAt(sb.length() - 1).append(")");
+        return sb.toString();
+    }
+
+    public static String join(List<String> values, String separator) {
+        if (ListUtils.isEmpty(values)) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (String value : values) {
+            sb.append(value).append(separator);
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
+    }
+
     /**
      * 分转元
      *
      * @param value 金额，分
      * @return 金额，元
      */
-    public static String changeF2Y(String value) {
+    public static String formatF2Y(String value) {
         if (isEmpty(value)) {
-            return "0";
+            return "0.00";
         }
 
-        return BigDecimalUtils.divide(value, "100", 2, BigDecimal.ROUND_HALF_UP);
+        return BigDecimalUtils.divide(value, "100", 2);
+    }
+
+    public static String formatF2Y(int value) {
+        return formatF2Y(String.valueOf(value));
     }
 
     /**
@@ -438,7 +593,7 @@ public class StringUtils {
      * @param value 金额，元
      * @return 金额，分
      */
-    public static String changeY2F(String value) {
+    public static String formatY2F(String value) {
         if (isEmpty(value)) {
             return "0";
         }
@@ -452,12 +607,12 @@ public class StringUtils {
      * @param value 重量，克
      * @return 重量，千克
      */
-    public static String changeG2Kg(String value) {
+    public static String formatG2Kg(String value) {
         if (isEmpty(value)) {
             return "0";
         }
 
-        return BigDecimalUtils.divide(value, "1000", 3, BigDecimal.ROUND_HALF_UP);
+        return BigDecimalUtils.divide(value, "1000", 3);
     }
 
     /**
@@ -466,11 +621,19 @@ public class StringUtils {
      * @param value 重量，千克
      * @return 重量，克
      */
-    public static String changeKg2G(String value) {
+    public static String formatKg2G(String value) {
         if (isEmpty(value)) {
             return "0";
         }
 
         return BigDecimalUtils.multiply(value, "1000", 0, BigDecimal.ROUND_HALF_UP);
+    }
+
+    public static String format(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return value;
     }
 }
