@@ -1,6 +1,9 @@
 package cn.wbnull.helloutil.util;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.io.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +11,7 @@ import java.util.List;
  * File 工具类
  *
  * @author dukunbiao(null) 2018-08-08
- * https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/HelloUtil
  */
 public class FileUtils {
 
@@ -196,29 +199,16 @@ public class FileUtils {
      */
     public static List<File> getFiles(String path) {
         List<File> filesList = new ArrayList<>();
-
-        File[] files = new File(path).listFiles();
-
-        if (files == null) {
-            return filesList;
-        }
-
-        for (File file : files) {
-            if (file.isDirectory()) {
-                getFiles(file.getPath(), filesList);
-            } else {
-                filesList.add(file);
-            }
-        }
+        getFiles(path, filesList);
 
         return filesList;
     }
 
-    private static List<File> getFiles(String path, List<File> filesList) {
+    private static void getFiles(String path, List<File> filesList) {
         File[] files = new File(path).listFiles();
 
         if (files == null) {
-            return filesList;
+            return;
         }
 
         for (File file : files) {
@@ -228,7 +218,75 @@ public class FileUtils {
                 filesList.add(file);
             }
         }
+    }
+
+    public static List<File> getRootFiles(String path) {
+        List<File> filesList = new ArrayList<>();
+        getRootFiles(path, filesList);
 
         return filesList;
+    }
+
+    private static void getRootFiles(String path, List<File> filesList) {
+        File[] files = new File(path).listFiles();
+
+        if (files == null) {
+            return;
+        }
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                continue;
+            }
+
+            filesList.add(file);
+        }
+    }
+
+    public static JSONObject getFilesWithPath(String path) throws Exception {
+        JSONObject filesPath = new JSONObject();
+        getFilesWithPath(path, filesPath);
+
+        return filesPath;
+    }
+
+    private static void getFilesWithPath(String path, JSONObject filesPath) throws Exception {
+        File[] files = new File(path).listFiles();
+
+        if (files == null) {
+            return;
+        }
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                JSONObject filePath;
+                if (filesPath.containsKey(file.getName())) {
+                    filePath = filesPath.getJSONObject(file.getName());
+                } else {
+                    filePath = new JSONObject();
+                }
+
+                getFilesWithPath(file.getPath(), filePath);
+                filesPath.put(file.getName(), filePath);
+            } else {
+                filesPath.put(file.getName(), file.getCanonicalPath());
+            }
+        }
+    }
+
+    public static String formatFileSize(long length) {
+        DecimalFormat df = new DecimalFormat("#.00");
+
+        if (length < 1024) {
+            return df.format((double) length) + "B";
+        }
+        if (length < 1048576) {
+            return df.format((double) length / 1024) + "K";
+        }
+        if (length < 1073741824) {
+            return df.format((double) length / 1048576) + "M";
+        }
+
+        return df.format((double) length / 1073741824) + "G";
     }
 }
