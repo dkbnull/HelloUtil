@@ -3,6 +3,7 @@ package cn.wbnull.helloutil.util;
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,7 +90,7 @@ public class FileUtils {
             throw new Exception("file not exist:" + path);
         }
 
-        try (InputStream inputStream = new FileInputStream(file);
+        try (InputStream inputStream = Files.newInputStream(file.toPath());
              InputStreamReader inputStreamReader = new InputStreamReader(inputStream, charset);
              BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
             List<String> listValue = new ArrayList<>();
@@ -101,6 +102,49 @@ public class FileUtils {
 
             return listValue;
         }
+    }
+
+    public static List<String> readFile(String path, String charset, int size) throws Exception {
+        File file = new File(path);
+
+        if (!file.exists()) {
+            throw new Exception("file not exist:" + path);
+        }
+
+        try (InputStream inputStream = Files.newInputStream(file.toPath());
+             InputStreamReader inputStreamReader = new InputStreamReader(inputStream, charset);
+             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);) {
+            List<String> listValue = new ArrayList<>();
+
+            String str;
+            while ((str = bufferedReader.readLine()) != null) {
+                listValue.add(str);
+
+                if (listValue.size() >= size) {
+                    break;
+                }
+            }
+
+            return listValue;
+        }
+    }
+
+    public static void deleteFile(File file) {
+        if (!file.isDirectory()) {
+            file.delete();
+            return;
+        }
+
+        File[] files = file.listFiles();
+        if (files == null) {
+            return;
+        }
+
+        for (File fileTemp : files) {
+            deleteFile(fileTemp);
+            fileTemp.delete();
+        }
+        file.delete();
     }
 
     /**
