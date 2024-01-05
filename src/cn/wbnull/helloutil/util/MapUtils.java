@@ -8,7 +8,7 @@ import java.util.Map;
  * Map 工具类
  *
  * @author dukunbiao(null) 2018-07-26
- *         https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/HelloUtil
  */
 public class MapUtils {
 
@@ -57,7 +57,7 @@ public class MapUtils {
         }
 
         if (map.containsKey(key) && map.get(key) != null) {
-            return Integer.valueOf(map.get(key).toString());
+            return Integer.parseInt(map.get(key).toString());
         }
 
         return 0;
@@ -78,7 +78,7 @@ public class MapUtils {
 
         try {
             if (map.containsKey(key) && map.get(key) != null) {
-                return Integer.valueOf(map.get(key).toString());
+                return Integer.parseInt(map.get(key).toString());
             }
         } catch (NumberFormatException e) {
             return defaultValue;
@@ -100,7 +100,7 @@ public class MapUtils {
         }
 
         if (map.containsKey(key) && map.get(key) != null) {
-            return Double.valueOf(map.get(key).toString());
+            return Double.parseDouble(map.get(key).toString());
         }
 
         return 0d;
@@ -121,13 +121,22 @@ public class MapUtils {
 
         try {
             if (map.containsKey(key) && map.get(key) != null) {
-                return Double.valueOf(map.get(key).toString());
+                return Double.parseDouble(map.get(key).toString());
             }
         } catch (NumberFormatException e) {
             return defaultValue;
         }
 
         return defaultValue;
+    }
+
+    public static void addValue(Map<String, String> map, String key, String value) {
+        if (map.containsKey(key)) {
+            String valueTemp = BigDecimalUtils.add(map.get(key), value);
+            map.put(key, valueTemp);
+        } else {
+            map.put(key, value);
+        }
     }
 
     /**
