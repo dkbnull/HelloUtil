@@ -6,7 +6,7 @@ import java.util.List;
  * List 工具类
  *
  * @author dukunbiao(null) 2018-09-15
- *         https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/HelloUtil
  */
 public class ListUtils {
 
