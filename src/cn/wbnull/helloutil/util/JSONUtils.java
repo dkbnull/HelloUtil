@@ -10,8 +10,9 @@ import java.util.*;
  * JSON 工具类
  *
  * @author dukunbiao(null) 2018-07-26
- *         https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/HelloUtil
  */
+@SuppressWarnings("all")
 public class JSONUtils {
 
     private static final String WHITESPACE = "   ";
@@ -106,6 +107,14 @@ public class JSONUtils {
         return JSONObject.parseObject(JSONObject.toJSONString(object), Feature.OrderedField);
     }
 
+    public static <T> T convertJavaBean(Object object, Class<T> clazz) {
+        return JSONObject.parseObject(JSONObject.toJSONString(object), clazz);
+    }
+
+    public static <T> List<T> convertJavaListBean(Object object, Class<T> clazz) {
+        return JSONArray.parseArray(JSONArray.toJSONString(object), clazz);
+    }
+
     /**
      * Java Bean 转JSONArray
      *
@@ -134,6 +143,18 @@ public class JSONUtils {
         return map;
     }
 
+    public static JSONObject mapToJSON(Map<String, String> map) {
+        JSONObject json = new JSONObject();
+
+        List<String> keys = new ArrayList<>(map.keySet());
+
+        for (String key : keys) {
+            json.put(key, map.get(key));
+        }
+
+        return json;
+    }
+
     /**
      * 格式化JSON字符串，不校验JSON格式合法性
      *
@@ -141,7 +162,7 @@ public class JSONUtils {
      * @return 格式化后JSON字符串
      */
     public static String JSONFormat(String value) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         int length = value.length();
         int number = 0;
@@ -190,7 +211,7 @@ public class JSONUtils {
     }
 
     private static String indent(int number) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < number; i++) {
             sb.append(WHITESPACE);
         }
