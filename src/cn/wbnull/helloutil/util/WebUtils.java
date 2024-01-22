@@ -5,9 +5,7 @@ import cn.wbnull.helloutil.constant.UtilConstants;
 
 import javax.net.ssl.*;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.net.*;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
@@ -18,7 +16,7 @@ import java.util.Set;
  * Web 工具类
  *
  * @author dukunbiao(null)  2018-09-08
- *         https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/HelloUtil
  */
 public class WebUtils {
 
@@ -26,7 +24,7 @@ public class WebUtils {
     private static final String METHOD_GET = "GET";
 
     private static SSLSocketFactory sslSocketFactory = null;
-    private static HostnameVerifier hostnameVerifier = null;
+    private static HostnameVerifier hostnameVerifier;
 
     private static class DefaultTrustManager implements X509TrustManager {
 
@@ -54,7 +52,7 @@ public class WebUtils {
             context.getClientSessionContext().setSessionCacheSize(1000);
 
             sslSocketFactory = context.getSocketFactory();
-        } catch (Exception e) {
+        } catch (Exception ignore) {
 
         }
 
@@ -73,7 +71,8 @@ public class WebUtils {
      * @param trustPassword 信任证书密码
      * @throws Exception
      */
-    public static void initSSLSocketFactory(String keyPathname, String keyPassword, String trustPathname, String trustPassword) throws Exception {
+    public static void initSSLSocketFactory(String keyPathname, String keyPassword, String trustPathname,
+                                            String trustPassword) throws Exception {
         sslSocketFactory = getSSLContext(keyPathname, keyPassword, trustPathname, trustPassword).getSocketFactory();
         hostnameVerifier = (hostname, session) -> true;
     }
@@ -86,82 +85,41 @@ public class WebUtils {
         WebUtils.hostnameVerifier = hostnameVerifier;
     }
 
-    /**
-     * HTTP POST请求
-     *
-     * @param url            请求地址
-     * @param params         请求参数
-     * @param connectTimeout 请求超时时间
-     * @param readTimeout    读取数据超时时间
-     * @return 返回参数
-     * @throws Exception
-     */
-    public static String doPost(String url, Map<String, Object> params, int connectTimeout, int readTimeout) throws Exception {
-        return doPost(url, params, UtilConstants.CHARSET_UTF8, connectTimeout, readTimeout);
+    public static String doPost(String url, Map<String, Object> params) throws Exception {
+        return doPost(url, buildParams(params, UtilConstants.CHARSET_UTF8), null, null,
+                ContentType.APPLICATION_X_WWW_FORM_URLENCODED, ContentType.TEXT_HTML);
     }
 
-    /**
-     * HTTP POST请求
-     *
-     * @param url            请求地址
-     * @param params         请求参数
-     * @param charset        字符集
-     * @param connectTimeout 请求超时时间
-     * @param readTimeout    读取数据超时时间
-     * @return 返回参数
-     * @throws Exception
-     */
-    public static String doPost(String url, Map<String, Object> params, String charset, int connectTimeout, int readTimeout) throws Exception {
-        return doPost(url, buildParams(params, charset),
-                ContentType.TEXT_HTML, ContentType.APPLICATION_X_WWW_FORM_URLENCODED,
-                charset, connectTimeout, readTimeout);
+    public static String doPost(String url, String content) throws Exception {
+        return doPost(url, content, null, null, ContentType.APPLICATION_JSON, ContentType.APPLICATION_JSON);
     }
 
-    /**
-     * HTTP POST请求
-     *
-     * @param url            请求地址
-     * @param content        请求参数
-     * @param connectTimeout 请求超时时间
-     * @param readTimeout    读取数据超时时间
-     * @return 返回参数
-     * @throws Exception
-     */
-    public static String doPost(String url, String content, int connectTimeout, int readTimeout) throws Exception {
-        return doPost(url, content, UtilConstants.CHARSET_UTF8, connectTimeout, readTimeout);
+    public static String doPost(String url, String content, ContentType contentType, ContentType accept) throws Exception {
+        return doPost(url, content, null, null, contentType, accept);
     }
 
-    /**
-     * HTTP POST请求
-     *
-     * @param url            请求地址
-     * @param content        请求参数
-     * @param charset        字符集
-     * @param connectTimeout 请求超时时间
-     * @param readTimeout    读取数据超时时间
-     * @return 返回参数
-     * @throws Exception
-     */
-    public static String doPost(String url, String content, String charset, int connectTimeout, int readTimeout) throws Exception {
-        return doPost(url, content,
-                ContentType.TEXT_HTML, ContentType.APPLICATION_X_WWW_FORM_URLENCODED,
-                charset, connectTimeout, readTimeout);
+    public static String doPost(String url, String content, ContentType contentType, ContentType accept,
+                                Map<String, String> headers) throws Exception {
+        return doPost(url, content, null, headers, contentType, accept);
     }
 
-    /**
-     * HTTP POST请求
-     *
-     * @param url            请求地址
-     * @param content        请求参数
-     * @param accept         Accept
-     * @param contentType    Content-Type
-     * @param charset        字符集
-     * @param connectTimeout 请求超时时间
-     * @param readTimeout    读取数据超时时间
-     * @return 返回参数
-     * @throws Exception
-     */
-    public static String doPost(String url, String content, ContentType accept, ContentType contentType, String charset, int connectTimeout, int readTimeout) throws Exception {
+    public static String doPost(String url, String content, ContentType contentType, ContentType accept,
+                                String token) throws Exception {
+        return doPost(url, content, token, null, contentType, accept);
+    }
+
+    public static String doPost(String url, String content, String token, Map<String, String> headers,
+                                ContentType contentType, ContentType accept) throws Exception {
+        int connectTimeout = 60000;
+        int readTimeout = 120000;
+
+        return doPost(url, content, token, headers, contentType, accept, UtilConstants.CHARSET_UTF8,
+                connectTimeout, readTimeout);
+    }
+
+    public static String doPost(String url, String content, String token, Map<String, String> headers,
+                                ContentType contentType, ContentType accept, String charset,
+                                int connectTimeout, int readTimeout) throws Exception {
         byte[] request = {};
         if (content != null) {
             request = content.getBytes(charset);
@@ -170,10 +128,10 @@ public class WebUtils {
         HttpURLConnection connection = null;
         OutputStream outputStream = null;
         try {
-            String acceptValue = accept.toString();
             String contentTypeValue = contentType.toString() + ";charset=" + charset;
+            String acceptValue = accept.toString();
 
-            connection = getConnection(new URL(url), METHOD_POST, acceptValue, contentTypeValue);
+            connection = getConnection(new URL(url), METHOD_POST, contentTypeValue, acceptValue, token, headers);
             connection.setConnectTimeout(connectTimeout);
             connection.setReadTimeout(readTimeout);
 
@@ -191,66 +149,26 @@ public class WebUtils {
         }
     }
 
-    /**
-     * HTTP GET请求
-     *
-     * @param url            请求地址
-     * @param params         请求参数
-     * @param connectTimeout 请求超时时间
-     * @param readTimeout    读取数据超时时间
-     * @return 返回参数
-     * @throws Exception
-     */
-    public static String doGet(String url, Map<String, Object> params, int connectTimeout, int readTimeout) throws Exception {
-        return doGet(url, params, UtilConstants.CHARSET_UTF8, connectTimeout, readTimeout);
+    public static String doGet(String url, Map<String, Object> params) throws Exception {
+        int connectTimeout = 60000;
+        int readTimeout = 120000;
+
+        return doGet(url, buildParams(params, UtilConstants.CHARSET_UTF8), null, null,
+                ContentType.APPLICATION_X_WWW_FORM_URLENCODED, ContentType.TEXT_HTML,
+                UtilConstants.CHARSET_UTF8, connectTimeout, readTimeout);
     }
 
-    /**
-     * HTTP GET请求
-     *
-     * @param url            请求地址
-     * @param params         请求参数
-     * @param charset        字符集
-     * @param connectTimeout 请求超时时间
-     * @param readTimeout    读取数据超时时间
-     * @return 返回参数
-     * @throws Exception
-     */
-    public static String doGet(String url, Map<String, Object> params, String charset, int connectTimeout, int readTimeout) throws Exception {
-        return doGet(url, buildParams(params, charset),
-                ContentType.TEXT_HTML, ContentType.APPLICATION_X_WWW_FORM_URLENCODED,
-                charset, connectTimeout, readTimeout);
+    public static String doGet(String url, String content, ContentType contentType, ContentType accept) throws Exception {
+        return doGet(url, content, null, null, contentType, accept);
     }
 
-    /**
-     * HTTP GET请求
-     *
-     * @param url            请求地址
-     * @param content        请求参数
-     * @param connectTimeout 请求超时时间
-     * @param readTimeout    读取数据超时时间
-     * @return 返回参数
-     * @throws Exception
-     */
-    public static String doGet(String url, String content, int connectTimeout, int readTimeout) throws Exception {
-        return doGet(url, content, UtilConstants.CHARSET_UTF8, connectTimeout, readTimeout);
-    }
+    public static String doGet(String url, String content, String token, Map<String, String> headers,
+                               ContentType contentType, ContentType accept) throws Exception {
+        int connectTimeout = 60000;
+        int readTimeout = 120000;
 
-    /**
-     * HTTP GET请求
-     *
-     * @param url            请求地址
-     * @param content        请求参数
-     * @param charset        字符集
-     * @param connectTimeout 请求超时时间
-     * @param readTimeout    读取数据超时时间
-     * @return 返回参数
-     * @throws Exception
-     */
-    public static String doGet(String url, String content, String charset, int connectTimeout, int readTimeout) throws Exception {
-        return doGet(url, content,
-                ContentType.TEXT_HTML, ContentType.APPLICATION_X_WWW_FORM_URLENCODED,
-                charset, connectTimeout, readTimeout);
+        return doGet(url, content, token, headers, contentType, accept, UtilConstants.CHARSET_UTF8,
+                connectTimeout, readTimeout);
     }
 
     /**
@@ -266,13 +184,14 @@ public class WebUtils {
      * @return 返回参数
      * @throws Exception
      */
-    public static String doGet(String url, String content, ContentType accept, ContentType contentType, String charset, int connectTimeout, int readTimeout) throws Exception {
+    public static String doGet(String url, String content, String token, Map<String, String> headers, ContentType contentType,
+                               ContentType accept, String charset, int connectTimeout, int readTimeout) throws Exception {
         HttpURLConnection connection = null;
         try {
-            String acceptValue = accept.toString();
             String contentTypeValue = contentType.toString() + ";charset=" + charset;
+            String acceptValue = accept.toString();
 
-            connection = getConnection(buildGetUrl(url, content), METHOD_GET, acceptValue, contentTypeValue);
+            connection = getConnection(buildGetUrl(url, content), METHOD_GET, contentTypeValue, acceptValue, token, headers);
             connection.setConnectTimeout(connectTimeout);
             connection.setReadTimeout(readTimeout);
 
@@ -284,7 +203,11 @@ public class WebUtils {
         }
     }
 
-    private static String buildParams(Map<String, Object> params, String charset) throws Exception {
+    public static String buildParams(Map<String, Object> params) throws Exception {
+        return buildParams(params, UtilConstants.CHARSET_UTF8);
+    }
+
+    public static String buildParams(Map<String, Object> params, String charset) throws Exception {
         if (MapUtils.isEmpty(params)) {
             return null;
         }
@@ -310,7 +233,8 @@ public class WebUtils {
         return sb.toString();
     }
 
-    private static HttpURLConnection getConnection(URL url, String method, String accept, String contentType) throws Exception {
+    private static HttpURLConnection getConnection(URL url, String method, String contentType, String accept, String token,
+                                                   Map<String, String> headers) throws Exception {
         HttpURLConnection connection;
         if ("https".equalsIgnoreCase(url.getProtocol())) {
             HttpsURLConnection connectionHttps = (HttpsURLConnection) url.openConnection();
@@ -324,14 +248,22 @@ public class WebUtils {
         connection.setRequestMethod(method);
         connection.setDoInput(true);
         connection.setDoOutput(true);
-        connection.setRequestProperty("Accept", accept);
-        connection.setRequestProperty("User-Agent", "aop-sdk-java");
         connection.setRequestProperty("Content-Type", contentType);
+        connection.setRequestProperty("Accept", accept);
+        if (!StringUtils.isEmpty(token)) {
+            connection.setRequestProperty("Authorization", token);
+        }
+        if (!MapUtils.isEmpty(headers)) {
+            for (String key : headers.keySet()) {
+                connection.setRequestProperty(key, headers.get(key));
+            }
+        }
 
         return connection;
     }
 
-    private static SSLContext getSSLContext(String keyPathname, String keyPassword, String trustPathname, String trustPassword) throws Exception {
+    private static SSLContext getSSLContext(String keyPathname, String keyPassword, String trustPathname,
+                                            String trustPassword) throws Exception {
         KeyManager[] keyManagers;
         if (!StringUtils.isEmpty(keyPathname)) {
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
@@ -386,7 +318,8 @@ public class WebUtils {
             if (StringUtils.isEmpty(response)) {
                 throw new IOException(connection.getResponseCode() + ":" + connection.getResponseMessage());
             } else {
-                throw new IOException(response);
+                //throw new IOException(response);
+                return response;
             }
         }
     }
