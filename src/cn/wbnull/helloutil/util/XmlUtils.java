@@ -3,6 +3,7 @@ package cn.wbnull.helloutil.util;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.mapper.MapperWrapper;
 import org.dom4j.*;
 
 import java.util.ArrayList;
@@ -13,8 +14,9 @@ import java.util.Map;
  * XML 工具类
  *
  * @author dukunbiao(null)  2018-07-26
- *         https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/HelloUtil
  */
+@SuppressWarnings("all")
 public class XmlUtils {
 
     private XmlUtils() {
@@ -43,39 +45,41 @@ public class XmlUtils {
      * @return XML格式字符串
      */
     public static String mapToXml(Map<String, Object> map, String root) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<").append(root).append(">\n");
-        sb.append(mapToXml(map));
-        sb.append("</").append(root).append(">");
-        return sb.toString();
+        return "<" + root + ">" +
+                mapToXml(map) +
+                "</" + root + ">";
     }
 
-    /**
-     * Map转XML，支持fastjson
-     *
-     * @param map        待转化Map
-     * @param root       根节点
-     * @param namespaces 命名空间
-     * @return
-     */
     public static String mapToXml(Map<String, Object> map, String root, String namespaces) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<").append(root).append(" ").append(namespaces).append(">\n");
-        sb.append(mapToXml(map));
-        sb.append("</").append(root).append(">");
-        return sb.toString();
+        return "<" + root + " " + namespaces + ">" +
+                mapToXml(map) +
+                "</" + root + ">";
     }
 
-    private static String mapToXml(Map<String, Object> map) {
+    public static String mapToXml(Map<String, Object> map) {
         StringBuilder sb = new StringBuilder();
         List<String> keys = new ArrayList<>(map.keySet());
         for (String key : keys) {
             sb.append("<").append(key).append(">");
             sb.append(map.get(key));
-            sb.append("</").append(key).append(">\n");
+            sb.append("</").append(key).append(">");
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Java Bean转XML
+     *
+     * @param object 待转化Java Bean
+     * @return
+     * @throws Exception XML格式字符串
+     */
+    public static String javaBeanToXmlByXStream(Object object) {
+        XStream xStream = new XStream();
+        xStream.processAnnotations(object.getClass());
+
+        return xStream.toXML(object);
     }
 
     /**
@@ -89,6 +93,10 @@ public class XmlUtils {
         return mapToXml(JSONUtils.javaBeanToJSON(object), root);
     }
 
+    public static String javaBeanToXml(Object object) {
+        return mapToXml(JSONUtils.javaBeanToJSON(object));
+    }
+
     /**
      * Java Bean转XML
      *
@@ -99,20 +107,6 @@ public class XmlUtils {
      */
     public static String javaBeanToXml(Object object, String root, String namespaces) {
         return mapToXml(JSONUtils.javaBeanToJSON(object), root, namespaces);
-    }
-
-    /**
-     * Java Bean转XML
-     *
-     * @param object 待转化Java Bean
-     * @return
-     * @throws Exception XML格式字符串
-     */
-    public static String javaBeanToXmlV2(Object object) {
-        XStream xStream = new XStream();
-        xStream.processAnnotations(object.getClass());
-
-        return xStream.toXML(object);
     }
 
     /**
@@ -168,8 +162,8 @@ public class XmlUtils {
     /**
      * XML转 Java Bean
      *
-     * @param xml   待转化XML
-     * @param clazz 返回参数类型
+     * @param xml
+     * @param clazz
      * @param <T>
      * @return
      * @throws Exception
@@ -186,12 +180,26 @@ public class XmlUtils {
      * @param <T>
      * @return
      */
-    public static <T> T xmlToJavaBeanV2(String xml, Class[] types) {
+    @SuppressWarnings({"unchecked"})
+    public static <T> T xmlToJavaBeanByXStream(String xml, Class[] types) {
         if (StringUtils.isEmpty(xml)) {
             return null;
         }
 
-        XStream xStream = new XStream();
+        XStream xStream = new XStream() {
+            @Override
+            protected MapperWrapper wrapMapper(MapperWrapper next) {
+                return new MapperWrapper(next) {
+                    @Override
+                    public boolean shouldSerializeMember(Class definedIn, String fieldName) {
+                        if (definedIn == Object.class) {
+                            return false;
+                        }
+                        return super.shouldSerializeMember(definedIn, fieldName);
+                    }
+                };
+            }
+        };
         XStream.setupDefaultSecurity(xStream);
         xStream.allowTypes(types);
         xStream.processAnnotations(types);
@@ -202,6 +210,7 @@ public class XmlUtils {
         return DocumentHelper.parseText(xml);
     }
 
+    @SuppressWarnings({"unchecked"})
     private static JSONObject elementToJSON(Element element) {
         JSONObject jsonObject = new JSONObject();
         List<Attribute> attributes = element.attributes();
@@ -256,7 +265,7 @@ public class XmlUtils {
             return 0;
         }
 
-        return Integer.valueOf(getXmlString(xml, key));
+        return Integer.parseInt(getXmlString(xml, key));
     }
 
     /**
@@ -273,7 +282,7 @@ public class XmlUtils {
         }
 
         try {
-            return Integer.valueOf(getXmlString(xml, key));
+            return Integer.parseInt(getXmlString(xml, key));
         } catch (Exception e) {
             return defaultValue;
         }
@@ -292,7 +301,7 @@ public class XmlUtils {
             return 0d;
         }
 
-        return Double.valueOf(getXmlString(xml, key));
+        return Double.parseDouble(getXmlString(xml, key));
     }
 
     /**
@@ -309,7 +318,7 @@ public class XmlUtils {
         }
 
         try {
-            return Double.valueOf(getXmlString(xml, key));
+            return Double.parseDouble(getXmlString(xml, key));
         } catch (Exception e) {
             return defaultValue;
         }
