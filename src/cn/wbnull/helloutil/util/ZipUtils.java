@@ -9,7 +9,7 @@ import java.util.zip.ZipOutputStream;
  * Zip 工具类
  *
  * @author dukunbiao(null)  2019-04-18
- *         https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/HelloUtil
  */
 public class ZipUtils {
 
@@ -163,7 +163,7 @@ public class ZipUtils {
             if (fos != null) {
                 fos.close();
             }
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
     }
 }
