@@ -1,13 +1,14 @@
 package cn.wbnull.helloutil.util;
 
 import cn.wbnull.helloutil.config.UtilConfig;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Logger 工具类
  *
  * @author dukunbiao(null)  2018-12-17
- *         https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/HelloUtil
  */
 public class LoggerUtils {
 
@@ -25,7 +26,7 @@ public class LoggerUtils {
 
     private static Logger getLogger() {
         if (logger == null) {
-            logger = Logger.getLogger("rootLogger");
+            logger = LoggerFactory.getLogger(LoggerUtils.class);
         }
 
         return logger;
@@ -51,7 +52,7 @@ public class LoggerUtils {
         return StringUtils.toInt(UtilConfig.getLogLevel(), 0) > DEBUG;
     }
 
-    public static void error(Object message) {
+    public static void error(String message) {
         if (offLevel()) {
             return;
         }
@@ -91,7 +92,7 @@ public class LoggerUtils {
         }
     }
 
-    public static void error(Object message, Throwable t) {
+    public static void error(String message, Throwable t) {
         if (offLevel()) {
             return;
         }
@@ -131,7 +132,7 @@ public class LoggerUtils {
         }
     }
 
-    public static void warn(Object message) {
+    public static void warn(String message) {
         if (offLevel()) {
             return;
         }
@@ -171,7 +172,7 @@ public class LoggerUtils {
         }
     }
 
-    public static void info(Object message) {
+    public static void info(String message) {
         if (offLevel()) {
             return;
         }
@@ -211,7 +212,7 @@ public class LoggerUtils {
         }
     }
 
-    public static void debug(Object message) {
+    public static void debug(String message) {
         if (offLevel()) {
             return;
         }
