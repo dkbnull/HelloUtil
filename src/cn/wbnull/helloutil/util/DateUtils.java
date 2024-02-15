@@ -2,11 +2,14 @@ package cn.wbnull.helloutil.util;
 
 import cn.wbnull.helloutil.constant.UtilConstants;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -40,6 +43,14 @@ public class DateUtils {
 
     public static String dateFormat(int timestamp, String format) {
         return new SimpleDateFormat(format, Locale.CHINA).format(new Date(timestamp * 1000L));
+    }
+
+    public static String dateFormat(LocalDate localDate) {
+        return localDate.format(DateTimeFormatter.ofPattern(UtilConstants.DATE_FORMAT_ONLY));
+    }
+
+    public static String dateFormat(LocalTime localTime) {
+        return localTime.format(DateTimeFormatter.ofPattern(UtilConstants.DATE_FORMAT_TIME_ONLY));
     }
 
     public static String dateFormat(LocalDateTime localDateTime) {
@@ -157,12 +168,21 @@ public class DateUtils {
         return LocalDateTime.parse(dateValue.replaceAll("T", " "), dtf);
     }
 
+    public static LocalDate localDateParse(String dateValue) {
+        if (StringUtils.isEmpty(dateValue)) {
+            return null;
+        }
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(UtilConstants.DATE_FORMAT_ONLY);
+        return LocalDate.parse(dateValue, dtf);
+    }
+
     public static LocalTime localTimeParse(String dateValue) {
         if (StringUtils.isEmpty(dateValue)) {
             return null;
         }
 
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(UtilConstants.DATE_FORMAT_TIME_ONLY);
         return LocalTime.parse(dateValue, dtf);
     }
 
@@ -193,5 +213,57 @@ public class DateUtils {
 
     public static LocalDateTime toLocalDateTime(long timestamp) {
         return LocalDateTime.ofEpochSecond(timestamp, 0, ZoneOffset.ofHours(8));
+    }
+
+    public static String now() {
+        return dateFormat();
+    }
+
+    public static String nowDate() {
+        return new SimpleDateFormat(UtilConstants.DATE_FORMAT_ONLY, Locale.CHINA).format(new Date());
+    }
+
+    public static boolean isAfter(String date1, String date2) {
+        try {
+            return new SimpleDateFormat(UtilConstants.DATE_FORMAT_ONLY).parse(date1).getTime() >
+                    new SimpleDateFormat(UtilConstants.DATE_FORMAT_ONLY).parse(date2).getTime();
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    public static boolean isBefore(String date1, String date2) {
+        try {
+            return new SimpleDateFormat(UtilConstants.DATE_FORMAT_ONLY).parse(date1).getTime() <
+                    new SimpleDateFormat(UtilConstants.DATE_FORMAT_ONLY).parse(date2).getTime();
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    public static String nowTime() {
+        return new SimpleDateFormat(UtilConstants.DATE_FORMAT_TIME_ONLY, Locale.CHINA).format(new Date());
+    }
+
+    public static int getDayOfWeek() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        int day = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+
+        return day == 0 ? 7 : day;
+    }
+
+    public static int getDayOfMonth() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+
+        return calendar.get(Calendar.DAY_OF_MONTH);
+    }
+
+    public static int getDayOfYear() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+
+        return calendar.get(Calendar.DAY_OF_YEAR);
     }
 }

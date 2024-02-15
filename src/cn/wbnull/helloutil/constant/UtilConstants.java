@@ -4,7 +4,7 @@ package cn.wbnull.helloutil.constant;
  * 常量类
  *
  * @author dukunbiao(null) 2018-08-08
- *         https://github.com/dkbnull/Util
+ * https://github.com/dkbnull/Util
  */
 public class UtilConstants {
 
@@ -13,4 +13,6 @@ public class UtilConstants {
     public static final String CHARSET_GB2312 = "GB2312";
 
     public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    public static final String DATE_FORMAT_ONLY = "yyyy-MM-dd";
+    public static final String DATE_FORMAT_TIME_ONLY = "HH:mm:ss";
 }
