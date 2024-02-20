@@ -21,7 +21,7 @@ public class MapUtils {
      * @param map 待检查Map
      * @return true/false
      */
-    public static boolean isEmpty(Map map) {
+    public static <T, V> boolean isEmpty(Map<T, V> map) {
         return (map == null || map.isEmpty());
     }
 
@@ -32,7 +32,7 @@ public class MapUtils {
      * @param key key值
      * @return value值
      */
-    public static String getMapString(Map map, String key) {
+    public static <T, V> String getMapString(Map<T, V> map, String key) {
         if (isEmpty(map) || StringUtils.isEmpty(key)) {
             return "";
         }
@@ -51,7 +51,7 @@ public class MapUtils {
      * @param key key值
      * @return value值
      */
-    public static int getMapInt(Map map, String key) {
+    public static <T, V> int getMapInt(Map<T, V> map, String key) {
         if (isEmpty(map) || StringUtils.isEmpty(key)) {
             return 0;
         }
@@ -71,7 +71,7 @@ public class MapUtils {
      * @param defaultValue 默认值
      * @return value值
      */
-    public static int getMapInt(Map map, String key, int defaultValue) {
+    public static <T, V> int getMapInt(Map<T, V> map, String key, int defaultValue) {
         if (isEmpty(map) || StringUtils.isEmpty(key)) {
             return defaultValue;
         }
@@ -94,7 +94,7 @@ public class MapUtils {
      * @param key key值
      * @return value值
      */
-    public static double getMapDouble(Map map, String key) {
+    public static <T, V> double getMapDouble(Map<T, V> map, String key) {
         if (isEmpty(map) || StringUtils.isEmpty(key)) {
             return 0d;
         }
@@ -114,7 +114,7 @@ public class MapUtils {
      * @param defaultValue 默认值
      * @return value值
      */
-    public static double getMapDouble(Map map, String key, double defaultValue) {
+    public static <T, V> double getMapDouble(Map<T, V> map, String key, double defaultValue) {
         if (isEmpty(map) || StringUtils.isEmpty(key)) {
             return defaultValue;
         }
@@ -155,7 +155,7 @@ public class MapUtils {
      * @param map Map
      * @return Java Bean
      */
-    public static <T> T mapToJavaBean(Map map, Class<T> clazz) {
+    public static <T> T mapToJavaBean(Map<String, Object> map, Class<T> clazz) {
         return JSONObject.parseObject(new JSONObject(map).toJSONString(), clazz);
     }
 }

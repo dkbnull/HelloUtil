@@ -19,7 +19,7 @@ public class ListUtils {
      * @param list 待检查List
      * @return true/false
      */
-    public static boolean isEmpty(List list) {
+    public static <T> boolean isEmpty(List<T> list) {
         boolean isNull = (list == null || list.isEmpty());
 
         if (isNull) {
